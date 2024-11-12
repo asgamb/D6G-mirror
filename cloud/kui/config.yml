@@ -1,0 +1,4 @@
+kafka:
+  clusters:
+    - name: Clod_DC
+      bootstrapServers: broker1B:9093,broker2B:9093,broker3B:9093

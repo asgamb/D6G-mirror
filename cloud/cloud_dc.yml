@@ -1,0 +1,95 @@
+#Note: To connect from an external machine, change localhost references to your host's external IP/hostname.
+
+services:
+  broker1B:
+    image: bitnami/kafka:3.4
+    hostname: broker1B
+    container_name: broker1B
+    ports:
+      - 9291:9092
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_ENABLE_KRAFT: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: RAFT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@broker1B:9094,2@broker2B:9094,3@broker3B:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: INSIDE://broker1B:9093,OUTSIDE://10.30.2.35:9291
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,RAFT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_LISTENERS: INSIDE://broker1B:9093,RAFT://broker1B:9094,OUTSIDE://0.0.0.0:9092
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INSIDE
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_KRAFT_CLUSTER_ID: OTMwNzFhYTY1ODNiNGE5O2
+      KAFKA_CFG_KRAFT_REPLICATION_FACTOR: 3
+    networks:
+       mynet:
+        ipv4_address: 10.5.0.2
+
+
+
+  broker2B:
+    image: bitnami/kafka:3.4
+    hostname: broker2B
+    container_name: broker2B
+    ports:
+      - 9292:9092
+    environment:
+      KAFKA_CFG_NODE_ID: 2
+      KAFKA_ENABLE_KRAFT: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: RAFT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@broker1B:9094,2@broker2B:9094,3@broker3B:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: INSIDE://broker2B:9093,OUTSIDE://10.30.2.35:9292
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,RAFT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_LISTENERS: INSIDE://broker2B:9093,RAFT://broker2B:9094,OUTSIDE://0.0.0.0:9092
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INSIDE
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_KRAFT_CLUSTER_ID: OTMwNzFhYTY1ODNiNGE5O2
+      KAFKA_CFG_KRAFT_REPLICATION_FACTOR: 3
+    networks:
+       mynet:
+        ipv4_address: 10.5.0.3
+
+  broker3B:
+    image: bitnami/kafka:3.4
+    hostname: broker3B
+    container_name: broker3B
+    ports:
+      - 9293:9092
+    environment:
+      KAFKA_CFG_NODE_ID: 3
+      KAFKA_ENABLE_KRAFT: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: RAFT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@broker1B:9094,2@broker2B:9094,3@broker3B:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: INSIDE://broker3B:9093,OUTSIDE://10.30.2.35:9293
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,RAFT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_LISTENERS: INSIDE://broker3B:9093,RAFT://broker3B:9094,OUTSIDE://0.0.0.0:9092
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_KRAFT_CLUSTER_ID: OTMwNzFhYTY1ODNiNGE5O2
+      KAFKA_CFG_KRAFT_REPLICATION_FACTOR: 3
+    networks:
+       mynet:
+        ipv4_address: 10.5.0.4
+
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    volumes:
+      - ./kui/config.yml:/etc/kafkaui/dynamic_config.yaml
+    networks:
+       mynet:
+        ipv4_address: 10.5.0.5
+
+networks:
+  mynet:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/24
+         gateway: 10.5.0.1

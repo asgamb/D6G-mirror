@@ -1,0 +1,112 @@
+#Note: To connect from an external machine, change localhost references to your host's external IP/hostname.
+
+services:
+  broker1A:
+    image: bitnami/kafka:3.4
+    hostname: broker1A
+    container_name: broker1A
+    # volumes:
+    #   - ./data/broker1A:/bitnami/kafka/data
+    ports:
+      - 9191:9092
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_ENABLE_KRAFT: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: RAFT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@broker1A:9094,2@broker2A:9094,3@broker3A:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: INSIDE://broker1A:9093,OUTSIDE://10.30.2.36:9191
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,RAFT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_LISTENERS: INSIDE://broker1A:9093,RAFT://broker1A:9094,OUTSIDE://0.0.0.0:9092
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INSIDE
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_KRAFT_CLUSTER_ID: OTMwNzFhYTY1ODNiNGE5O1
+      KAFKA_CFG_KRAFT_REPLICATION_FACTOR: 3
+    networks:
+       mynet:
+        ipv4_address: 10.5.1.2
+
+  broker2A:
+    image: bitnami/kafka:3.4
+    hostname: broker2A
+    container_name: broker2A
+    # volumes:
+    #   - ./data/broker1A:/bitnami/kafka/data
+    ports:
+      - 9192:9092
+    environment:
+      KAFKA_CFG_NODE_ID: 2
+      KAFKA_ENABLE_KRAFT: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: RAFT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@broker1A:9094,2@broker2A:9094,3@broker3A:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: INSIDE://broker2A:9093,OUTSIDE://10.30.2.36:9192
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,RAFT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_LISTENERS: INSIDE://broker2A:9093,RAFT://broker2A:9094,OUTSIDE://0.0.0.0:9092
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INSIDE
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_KRAFT_CLUSTER_ID: OTMwNzFhYTY1ODNiNGE5O1
+      KAFKA_CFG_KRAFT_REPLICATION_FACTOR: 3
+    networks:
+       mynet:
+        ipv4_address: 10.5.1.3
+
+  broker3A:
+    image: bitnami/kafka:3.4
+    hostname: broker3A
+    container_name: broker3A
+    ports:
+      - 9193:9092
+    environment:
+      KAFKA_CFG_NODE_ID: 3
+      KAFKA_ENABLE_KRAFT: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: RAFT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@broker1A:9094,2@broker2A:9094,3@broker3A:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: INSIDE://broker3A:9093,OUTSIDE://10.30.2.36:9193
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,RAFT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_LISTENERS: INSIDE://broker3A:9093,RAFT://broker3A:9094,OUTSIDE://0.0.0.0:9092
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INSIDE
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_KRAFT_CLUSTER_ID: OTMwNzFhYTY1ODNiNGE5O1
+      KAFKA_CFG_KRAFT_REPLICATION_FACTOR: 3
+    networks:
+       mynet:
+        ipv4_address: 10.5.1.4
+
+  mirror-maker:
+    image: bitnami/kafka:3.4
+    hostname: mirror-maker
+    container_name: mirror-maker
+    volumes:
+      - ./mm2_config:/tmp/kafka/config
+    depends_on:
+      - broker1A
+      - broker2A
+      - broker3A
+    command: ["/opt/bitnami/kafka/bin/connect-mirror-maker.sh", "/tmp/kafka/config/mm2.properties"]
+    networks:
+       mynet:
+        ipv4_address: 10.5.1.5
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    volumes:
+      - ./kui/config.yml:/etc/kafkaui/dynamic_config.yaml
+    networks:
+       mynet:
+        ipv4_address: 10.5.1.6
+
+networks:
+  mynet:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.1.0/24
+         gateway: 10.5.1.1
+

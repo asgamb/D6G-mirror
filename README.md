@@ -19,7 +19,6 @@ Stop:
 ```./stop_cloud.sh```
 
 # Edge site commands
-start_edge.sh
 Run:
 ```./start_edge.sh```
 Stop:

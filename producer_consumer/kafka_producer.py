@@ -15,15 +15,16 @@ ec = kafkaConnections(fx)
 
 p = ec.createKafkaProducer()
 
-mess = """
+msg = """
     {
+     "time": %s,
      "site_id" : "D6Gsite1",
      "CPUs" : "100",
      "RAM" : "200",
      "storage" : "300",
      "active PODs" : "10"
 }   
-"""
+"""  
 
 def delivery_callback(err, msg):
     if err:
@@ -36,12 +37,15 @@ def delivery_callback(err, msg):
 topic = ec.ktopic
 ec.createKafkaTopic(topic)
 
+i = 0
 while True:
     try:
+       mess = msg % str(i)    
        p.produce(topic, value=mess, callback=delivery_callback)
        p.flush()
        p.poll(1)
        print(mess)
+       i = i + 1
        time.sleep(2)
     except KeyboardInterrupt:
        print("end of the task")
